@@ -1,6 +1,10 @@
 //################################################################
 //Frame buffer Handler.
 //Definds the handles used to Open the framebuffer, retrive information, and cleenup upon closing.
+//Along with all the specific drawing commands.
+//################################################################
+//Known Bugs:
+//When drawing large areas, the framebuffer is suseptible to tearing
 //################################################################
 //Lifecycle definition:
 //Constructor
@@ -12,10 +16,13 @@
 //width()
 //height()
 //bitsPerPixel()
+//waitForVSync()
 //convertColor()    //This function remaps the color input to the spicific framebuffer.
 //setPixel()        //sets the color of a single pixel
 //fill()            //fill the entire framebuffer with a single colour
 //drawRect()        //Draws a rectangle
+//saveRegion()      //Saved a region of the frame buffer to a secondary buffer
+//restoreRegion()   //Restore a region from secondary buffer to frame buffer
 //    ↓
 //close()
 //    ↓
@@ -29,6 +36,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <cstring>
 
 //The constructor initializes everything to a known "not open" state (variables defined in Framebuffer.hpp)
 Framebuffer::Framebuffer()
@@ -37,6 +45,7 @@ Framebuffer::Framebuffer()
       memorySize_(0),
       width_(0),
       height_(0),
+      virtualWidth_(0),
       bitsPerPixel_(0),
       lineLength_(0),
       redOffset_(0),
@@ -76,6 +85,7 @@ bool Framebuffer::open(const std::string& device)
 
     width_ = static_cast<int>(vinfo.xres);
     height_ = static_cast<int>(vinfo.yres);
+    virtualWidth_ = static_cast<int>(vinfo.xres_virtual);
     bitsPerPixel_ = static_cast<int>(vinfo.bits_per_pixel);
 
     redOffset_ = vinfo.red.offset;
@@ -139,6 +149,7 @@ void Framebuffer::close()
 
     width_ = 0;
     height_ = 0;
+    virtualWidth_ = 0;
     bitsPerPixel_ = 0;
     lineLength_ = 0;
 
@@ -171,9 +182,33 @@ int Framebuffer::height() const
     return height_;
 }
 
+int Framebuffer::virtualWidth() const
+{
+    return virtualWidth_;
+}
+
 int Framebuffer::bitsPerPixel() const
 {
     return bitsPerPixel_;
+}
+
+bool Framebuffer::waitForVSync()
+{
+    // Do nothing if the framebuffer is not open.
+    if (!isOpen())
+    {
+        return false;
+    }
+
+    // Wait for the next vertical synchronization.
+    int result = 0;
+
+    if (ioctl(fd_, FBIO_WAITFORVSYNC, &result) < 0)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 //Converts the application 0xAARRGGBB color into the framebuffer's
@@ -312,29 +347,242 @@ void Framebuffer::drawRect(
     int height,
     std::uint32_t color)
 {
+    if (!isOpen())                  // Do nothing if the framebuffer is not open.
+    {
+        return;
+    }
+
+    if (width <= 0 || height <= 0)  // Do nothing if the rectangle has no size.
+    {
+        return;
+    }
+
+    if (x < 0 || y < 0 ||           // Do nothing if the rectangle is outside the framebuffer.
+        x + width > width_ ||
+        y + height > height_)
+    {
+        return;
+    }
+
+    if (bitsPerPixel_ != 32)        // The current framebuffer is 32 bits per pixel.
+    {
+        return;
+    }
+
+    // Convert the application color into the
+    // framebuffer's actual pixel format.
+    const std::uint32_t pixel = convertColor(color);
+
+    // Draw each row of the rectangle.
+    for (int currentY = 0;
+         currentY < height;
+         ++currentY)
+    {
+        // Find the beginning of the framebuffer row.
+        auto* row =
+            static_cast<std::uint8_t*>(memory_) +
+            static_cast<std::size_t>(y + currentY) * lineLength_;
+
+        // Move to the first pixel of the rectangle.
+        auto* destination =
+            reinterpret_cast<std::uint32_t*>(row) + x;
+
+        // Fill the entire row with the converted pixel.
+        for (int currentX = 0;
+             currentX < width;
+             ++currentX)
+        {
+            destination[currentX] = pixel;
+        }
+    }
+}
+
+bool Framebuffer::saveRegion(
+    int x,
+    int y,
+    int width,
+    int height,
+    std::vector<std::uint32_t>& buffer)
+{
+    // Do nothing if the framebuffer is not open.
+    if (!isOpen())
+    {
+        return false;
+    }
+
+    // The current framebuffer is 32 bits per pixel.
+    if (bitsPerPixel_ != 32)
+    {
+        return false;
+    }
+
+    // Do nothing if the region has no size.
+    if (width <= 0 || height <= 0)
+    {
+        return false;
+    }
+
+    // Do nothing if the region is outside the framebuffer.
+    if (x < 0 || y < 0 ||
+        x + width > width_ ||
+        y + height > height_)
+    {
+        return false;
+    }
+
+    // Make room for all pixels in the region.
+    buffer.resize(
+        static_cast<std::size_t>(width) *
+        static_cast<std::size_t>(height));
+
+    // Copy every row from the framebuffer into the buffer.
+    for (int currentY = 0; currentY < height; ++currentY)
+    {
+        // Find the beginning of the framebuffer row.
+        auto* sourceRow =
+            static_cast<std::uint8_t*>(memory_) +
+            static_cast<std::size_t>(y + currentY) * lineLength_;
+
+        // Move to the first pixel of the requested region.
+        auto* source =
+            reinterpret_cast<std::uint32_t*>(sourceRow) + x;
+
+        // Find the position in our buffer where this row starts.
+        auto* destination =
+            buffer.data() +
+            static_cast<std::size_t>(currentY) *
+            static_cast<std::size_t>(width);
+
+        // Copy the row of pixels.
+        for (int currentX = 0; currentX < width; ++currentX)
+        {
+            destination[currentX] = source[currentX];
+        }
+    }
+
+    return true;
+}
+
+bool Framebuffer::restoreRegion(
+    int x,
+    int y,
+    int width,
+    int height,
+    const std::vector<std::uint32_t>& buffer)
+{
+    // Do nothing if the framebuffer is not open.
+    if (!isOpen())
+    {
+        return false;
+    }
+
+    // The current framebuffer is 32 bits per pixel.
+    if (bitsPerPixel_ != 32)
+    {
+        return false;
+    }
+
+    // Do nothing if the region has no size.
+    if (width <= 0 || height <= 0)
+    {
+        return false;
+    }
+
+    // Do nothing if the region is outside the framebuffer.
+    if (x < 0 || y < 0 ||
+        x + width > width_ ||
+        y + height > height_)
+    {
+        return false;
+    }
+
+    // Make sure the buffer contains enough pixels.
+    const std::size_t requiredPixels =
+        static_cast<std::size_t>(width) *
+        static_cast<std::size_t>(height);
+
+    if (buffer.size() < requiredPixels)
+    {
+        return false;
+    }
+
+    // Copy every row from the buffer back into the framebuffer.
+    for (int currentY = 0; currentY < height; ++currentY)
+    {
+        // Find the beginning of the framebuffer row.
+        auto* destinationRow =
+            static_cast<std::uint8_t*>(memory_) +
+            static_cast<std::size_t>(y + currentY) * lineLength_;
+
+        // Move to the first pixel of the requested region.
+        auto* destination =
+            reinterpret_cast<std::uint32_t*>(destinationRow) + x;
+
+        // Find the position in our buffer where this row starts.
+        const auto* source =
+            buffer.data() +
+            static_cast<std::size_t>(currentY) *
+            static_cast<std::size_t>(width);
+
+        // Copy the row of pixels.
+        for (int currentX = 0; currentX < width; ++currentX)
+        {
+            destination[currentX] = source[currentX];
+        }
+    }
+
+    return true;
+}
+
+void Framebuffer::drawBuffer(
+    const std::vector<std::uint32_t>& buffer)
+{
     // Do nothing if the framebuffer is not open.
     if (!isOpen())
     {
         return;
     }
 
-    // Do nothing if the rectangle has no size.
-    if (width <= 0 || height <= 0)
+    // The current framebuffer is 32 bits per pixel.
+    if (bitsPerPixel_ != 32)
     {
         return;
     }
 
-    // Draw each row of the rectangle.
-    for (int currentY = y;
-         currentY < y + height;
+    // Make sure the buffer contains enough pixels
+    // for the entire visible framebuffer.
+    const std::size_t requiredPixels =
+        static_cast<std::size_t>(width_) *
+        static_cast<std::size_t>(height_);
+
+    if (buffer.size() < requiredPixels)
+    {
+        return;
+    }
+
+    // Copy every row from the RAM buffer
+    // into the framebuffer.
+    for (int currentY = 0;
+         currentY < height_;
          ++currentY)
     {
-        // Draw each pixel in the current row.
-        for (int currentX = x;
-             currentX < x + width;
-             ++currentX)
-        {
-            setPixel(currentX, currentY, color);
-        }
+        // Find the beginning of the framebuffer row.
+        auto* destinationRow =
+            static_cast<std::uint8_t*>(memory_) +
+            static_cast<std::size_t>(currentY) * lineLength_;
+
+        // Find the beginning of the corresponding
+        // row in the RAM buffer.
+        const auto* sourceRow =
+            buffer.data() +
+            static_cast<std::size_t>(currentY) *
+            static_cast<std::size_t>(width_);
+
+        // Copy the visible pixels of this row.
+        std::memcpy(
+            destinationRow,
+            sourceRow,
+            static_cast<std::size_t>(width_) *
+            sizeof(std::uint32_t));
     }
 }

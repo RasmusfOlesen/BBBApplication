@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 class Framebuffer
 {
@@ -20,7 +21,10 @@ public:
 
     int width() const;
     int height() const;
+    int virtualWidth() const;
     int bitsPerPixel() const;
+    
+    bool waitForVSync();
 
     void setPixel(int x, int y, std::uint32_t color);
     void fill(std::uint32_t color);
@@ -32,6 +36,23 @@ public:
         int height,
         std::uint32_t color);
 
+    bool saveRegion(
+        int x,
+        int y,
+        int width,
+        int height,
+        std::vector<std::uint32_t>& buffer);
+
+    bool restoreRegion(
+        int x,
+        int y,
+        int width,
+        int height,
+        const std::vector<std::uint32_t>& buffer);
+    
+    void drawBuffer(
+        const std::vector<std::uint32_t>& buffer);
+
 private:
     int fd_;
     void* memory_;
@@ -39,6 +60,7 @@ private:
 
     int width_;
     int height_;
+    int virtualWidth_;
     int bitsPerPixel_;
     int lineLength_;
 
