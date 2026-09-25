@@ -1,0 +1,87 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build BBB Application",
+            "type": "shell",
+            "command": "cmake --build build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Stop GDB Server",
+            "type": "shell",
+            "command": "ssh Beagle@192.168.137.2 \"pkill gdbserver || true\"",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Deploy to BeagleBone",
+            "type": "shell",
+            "command": "scp build/bbb_application Beagle@192.168.137.2:/home/Beagle/",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {   
+            "label": "Start GDB Server", 
+            "type": "shell", 
+            "command": "ssh Beagle@192.168.137.2 \"nohup gdbserver :2345 /home/Beagle/bbb_application >/tmp/gdbserver.log 2>&1 </dev/null &\"",
+            "options": { 
+                "cwd": "${workspaceFolder}" 
+            }, 
+            "problemMatcher": [] 
+        },
+        { 
+            "label": "Build Deploy and Start GDB Server", 
+            "dependsOrder": "sequence", 
+            "dependsOn": [ 
+                "Build BBB Application",
+                "Stop GDB Server", 
+                "Deploy to BeagleBone", 
+                "Start GDB Server" 
+            ], 
+            "problemMatcher": [] 
+        },
+        {
+            "label": "Build and Deploy",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Build BBB Application",
+                "Stop GDB Server",
+                "Deploy to BeagleBone"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Run on BeagleBone", 
+            "type": "shell", 
+            "command": "ssh Beagle@192.168.137.2 /home/Beagle/bbb_application", 
+            "options": { 
+                "cwd": "${workspaceFolder}" 
+            }, 
+            "problemMatcher": [] 
+        }, 
+        {   "label": "Build Deploy and Run", 
+            "dependsOrder": "sequence", 
+            "dependsOn": [ 
+                "Build BBB Application",
+                "Stop GDB Server",
+                "Deploy to BeagleBone", 
+                "Run on BeagleBone" 
+            ], 
+            "problemMatcher": []            
+        }
+    ]
+}
