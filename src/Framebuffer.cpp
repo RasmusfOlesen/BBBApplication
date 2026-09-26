@@ -37,6 +37,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <cstring>
+#include <iostream> //for the diagnosics block
 
 //The constructor initializes everything to a known "not open" state (variables defined in Framebuffer.hpp)
 Framebuffer::Framebuffer()
@@ -82,6 +83,38 @@ bool Framebuffer::open(const std::string& device)
         close();
         return false;
     }
+
+    //###################################################################
+    //Diagnostics print out block
+    std::cout << "Pixel clock: "
+          << vinfo.pixclock
+          << " ps\n";
+
+    std::cout << "Left margin: "
+            << vinfo.left_margin
+            << '\n';
+
+    std::cout << "Right margin: "
+            << vinfo.right_margin
+            << '\n';
+
+    std::cout << "Upper margin: "
+            << vinfo.upper_margin
+            << '\n';
+
+    std::cout << "Lower margin: "
+            << vinfo.lower_margin
+            << '\n';
+
+    std::cout << "HSync length: "
+            << vinfo.hsync_len
+            << '\n';
+
+    std::cout << "VSync length: "
+            << vinfo.vsync_len
+            << '\n';
+
+    //###################################################################
 
     width_ = static_cast<int>(vinfo.xres);
     height_ = static_cast<int>(vinfo.yres);

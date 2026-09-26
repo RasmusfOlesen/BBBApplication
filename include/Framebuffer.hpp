@@ -23,6 +23,9 @@ public:
     int height() const;
     int virtualWidth() const;
     int bitsPerPixel() const;
+    int pixelClock() const;
+    int hSyncLength() const;
+    int vSyncLength() const;
     
     bool waitForVSync();
 
@@ -57,6 +60,20 @@ private:
     int fd_;
     void* memory_;
     std::size_t memorySize_;
+
+    uint32_t crtcId_;
+
+    uint32_t framebufferId0_;
+    uint32_t framebufferId1_;
+
+    uint32_t dumbBufferHandle0_;
+    uint32_t dumbBufferHandle1_;
+
+    void* dumbBuffer0_;
+    void* dumbBuffer1_;
+
+    std::size_t dumbBufferSize0_;
+    std::size_t dumbBufferSize1_;
 
     int width_;
     int height_;
