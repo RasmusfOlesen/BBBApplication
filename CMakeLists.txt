@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDART_REQUIRED ON)
 add_executable(bbb_application
 	src/main.cpp
 	src/Framebuffer.cpp
+    src/Renderer.cpp
 )
 
 target_include_directories(bbb_application PRIVATE
