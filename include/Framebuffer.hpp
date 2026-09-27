@@ -14,84 +14,45 @@ public:
     Framebuffer(const Framebuffer&) = delete;
     Framebuffer& operator=(const Framebuffer&) = delete;
 
-    bool open(const std::string& device = "/dev/fb0");
+    // Open the DRM device used to control the display.
+    bool open(const std::string& device = "/dev/dri/card0");
     void close();
+
+    bool present(bool newFrameAvailable);
 
     bool isOpen() const;
 
     int width() const;
     int height() const;
-    int virtualWidth() const;
-    int bitsPerPixel() const;
-    int pixelClock() const;
-    int hSyncLength() const;
-    int vSyncLength() const;
-    
-    bool waitForVSync();
-
-    void setPixel(int x, int y, std::uint32_t color);
-    void fill(std::uint32_t color);
-
-    void drawRect(
-        int x,
-        int y,
-        int width,
-        int height,
-        std::uint32_t color);
-
-    bool saveRegion(
-        int x,
-        int y,
-        int width,
-        int height,
-        std::vector<std::uint32_t>& buffer);
-
-    bool restoreRegion(
-        int x,
-        int y,
-        int width,
-        int height,
-        const std::vector<std::uint32_t>& buffer);
-    
-    void drawBuffer(
-        const std::vector<std::uint32_t>& buffer);
 
 private:
     int fd_;
-    void* memory_;
-    std::size_t memorySize_;
 
     uint32_t crtcId_;
 
-    uint32_t framebufferId0_;
-    uint32_t framebufferId1_;
+    uint32_t originalFramebufferId_;
 
-    uint32_t dumbBufferHandle0_;
-    uint32_t dumbBufferHandle1_;
-
-    void* dumbBuffer0_;
-    void* dumbBuffer1_;
-
-    std::size_t dumbBufferSize0_;
-    std::size_t dumbBufferSize1_;
+    int activeBufferIndex_;
+    bool pageFlipPending_;
+    
+    //create a struct to hold all the variable to handle creation of a framebuffer
+    struct Buffer
+    {
+        uint32_t framebufferId = 0;
+        uint32_t dumbBufferHandle = 0;
+        void* memory = nullptr;
+        std::size_t size = 0;
+    };
+    //create two instances for the amougnt of framebuffers needed.
+    Buffer buffers_[2];
 
     int width_;
     int height_;
-    int virtualWidth_;
-    int bitsPerPixel_;
-    int lineLength_;
-
-    unsigned int redOffset_;
-    unsigned int redLength_;
-
-    unsigned int greenOffset_;
-    unsigned int greenLength_;
-
-    unsigned int blueOffset_;
-    unsigned int blueLength_;
-
-    unsigned int alphaOffset_;
-    unsigned int alphaLength_;
-
-    std::uint32_t convertColor(std::uint32_t color) const;
+    
+    static void pageFlipHandler(
+        int fd,
+        unsigned int frame,
+        unsigned int sec,
+        unsigned int usec,
+        void* data);
 };

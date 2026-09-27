@@ -12,6 +12,11 @@ add_executable(bbb_application
 
 target_include_directories(bbb_application PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_SYSROOT}/usr/include/libdrm
+)
+
+target_link_libraries(bbb_application PRIVATE
+    drm
 )
 
 target_compile_options(bbb_application PRIVATE

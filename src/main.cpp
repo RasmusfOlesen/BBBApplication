@@ -32,14 +32,6 @@ int main()
               << framebuffer.height()
               << '\n';
 
-	std::cout << "Virtual width: "
-          	  << framebuffer.virtualWidth()
-          	  << '\n';
-
-    std::cout << "Bits per pixel: "
-              << framebuffer.bitsPerPixel()
-              << '\n';
-
 	//############################################################
 	// Drawing part of main	
 	//############################################################
@@ -54,7 +46,7 @@ int main()
 	const int squareSize = 20;
 	int x = 100;
 	int y = 140;
-
+/*
 	for (int newX = 100; newX <= 600; newX += 10)
 	{
 		// Fill the back buffer with black.
@@ -81,7 +73,7 @@ int main()
 		}
 	
 	
-/*
+
 	std::vector<std::uint32_t> savedPixels;
 
 	int x = 100;
@@ -135,7 +127,7 @@ int main()
 			20,
 			0xFFFF0000);
 	}
-*/
+
 	// Display the completed frame.
 	auto start = std::chrono::steady_clock::now();
 
@@ -156,6 +148,7 @@ int main()
 	usleep(50000);
 
 	}
+*/
 	//############################################################
 	//End of drawing
 	//############################################################
