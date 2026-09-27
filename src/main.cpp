@@ -69,6 +69,36 @@ framebuffer.present(true);
 			100,
 			0x00FF0000);
 
+		renderer.drawLine(
+			100,
+			100,
+			400,
+			300,
+			5,
+			0x0000FF00);
+
+		renderer.fillCircle(
+			400,
+			240,
+			100,
+			0x000000FF);
+
+		renderer.drawCircle(
+			400,
+			240,
+			104,
+			8,
+			0x00FFFFFF);
+
+		renderer.drawArc(
+			700,
+			400,
+			80,
+			330,
+			30,
+			10,
+			0x00FFFF00);
+
 		auto drawEnd =
     		std::chrono::steady_clock::now();
 

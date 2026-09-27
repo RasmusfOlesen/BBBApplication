@@ -479,6 +479,13 @@ bool Framebuffer::present(bool newFrameAvailable)
             return false;
         }
 
+        if (pollFd.revents & (POLLERR | POLLHUP | POLLNVAL))
+        {
+            pageFlipPending_ = false;
+            return false;
+        }
+
+        
         if (pollFd.revents & POLLIN)
         {
             if (drmHandleEvent(
