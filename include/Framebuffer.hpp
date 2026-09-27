@@ -25,6 +25,9 @@ public:
     int width() const;
     int height() const;
 
+    int backBufferIndex() const;
+    void* bufferMemory(int index);
+
 private:
     int fd_;
 
@@ -34,7 +37,7 @@ private:
 
     int activeBufferIndex_;
     bool pageFlipPending_;
-    
+
     //create a struct to hold all the variable to handle creation of a framebuffer
     struct Buffer
     {

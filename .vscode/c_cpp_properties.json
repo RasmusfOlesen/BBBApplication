@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "BeagleBone",
+            "compilerPath": "/usr/bin/arm-linux-gnueabihf-g++",
+            "includePath": [
+                "${workspaceFolder}/include",
+                "/opt/bbb-sysroot/usr/include",
+                "/opt/bbb-sysroot/usr/include/libdrm"
+            ],
+            "defines": [],
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-arm"
+        }
+    ],
+    "version": 4
+}

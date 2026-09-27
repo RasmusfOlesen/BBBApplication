@@ -458,12 +458,36 @@ bool Framebuffer::present(bool newFrameAvailable)
 
     while (pageFlipPending_)
     {
-        if (drmHandleEvent(
-                fd_,
-                &eventContext) != 0)
+        pollfd pollFd = {};
+        pollFd.fd = fd_;
+        pollFd.events = POLLIN;
+
+        int result = poll(
+            &pollFd,
+            1,
+            1000); //1 second timeout
+
+        if (result < 0) //failed, typically because of an error or signal interruption.
         {
             pageFlipPending_ = false;
             return false;
+        }
+
+        if (result == 0) //timed out normally.
+        {
+            pageFlipPending_ = false;
+            return false;
+        }
+
+        if (pollFd.revents & POLLIN)
+        {
+            if (drmHandleEvent(
+                    fd_,
+                    &eventContext) != 0)
+            {
+                pageFlipPending_ = false;
+                return false;
+            }
         }
     }
 
@@ -478,6 +502,17 @@ int Framebuffer::width() const
 }
 
 int Framebuffer::height() const
+
 {
     return height_;
+}
+
+int Framebuffer::backBufferIndex() const
+{
+    return 1 - activeBufferIndex_;
+}
+
+void* Framebuffer::bufferMemory(int index)
+{
+    return buffers_[index].memory;
 }
