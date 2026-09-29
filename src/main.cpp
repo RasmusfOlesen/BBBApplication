@@ -1,16 +1,19 @@
 #include "Framebuffer.hpp"
 #include "Renderer.hpp"
+#include "Gauge.hpp"
 
 #include <cstdint>
 #include <iostream>
 #include <unistd.h>
-
+#include <thread>
 #include <chrono>
 
 
 
 int main()
 {
+	
+
     Framebuffer framebuffer; //Call the framebuffer class
 
     if (!framebuffer.open()) //Open the framebuffer
@@ -19,8 +22,6 @@ int main()
         return 1;
     }
 
-	
-	
 	//Write Debug information to console
     std::cout << "Framebuffer opened successfully.\n";
 
@@ -31,8 +32,7 @@ int main()
               << '\n';
 
 	//What buffer shal we write to
-	int backBufferIndex =
-    framebuffer.backBufferIndex();
+	int backBufferIndex = framebuffer.backBufferIndex();
 
 	//Where is the active back buffer
 	std::uint32_t* pixels =
@@ -44,96 +44,112 @@ int main()
 		framebuffer.width(),
 		framebuffer.height());
 
+	Gauge gauge(
+    renderer,
+    128,
+    128);
+
+	const RegionId needleRegionBuffer0 = 0;
+	const RegionId needleRegionBuffer1 = 1;
+
+	double needleAngle = 55.0;
+	double needleStep = -1.0;
+
+	//Draw Initial background
+	renderer.fill(0x00000000); //All black
+
+	gauge.drawBackground();
+
+	gauge.setNeedleAngle(needleAngle);
+
+	RenderRegion region =
+    	gauge.needleRegion();
+
+	renderer.saveRegion(
+    needleRegionBuffer0,
+    region.x,
+    region.y,
+    region.width,
+    region.height);
+
+	gauge.drawNeedle();
+
+	framebuffer.present(true);
+
+	backBufferIndex = framebuffer.backBufferIndex();
+
+	renderer.setTarget(
+		static_cast<std::uint32_t*>(
+			framebuffer.bufferMemory(
+				backBufferIndex)));
+
 	renderer.fill(0x00000000);
 
-	renderer.drawRect(
-		100,
-		100,
-		100,
-		100,
-		0x00FF0000);
+	gauge.drawBackground();
 
-framebuffer.present(true);	
+	renderer.saveRegion(
+		needleRegionBuffer1,
+		region.x,
+		region.y,
+		region.width,
+		region.height);
 
-	for (int x = 0; x < framebuffer.width() - 100; x += 10)
+	gauge.drawNeedle();
+
+	bool running = true;
+
+	while (running)
 	{
-		auto drawStart =
-    		std::chrono::steady_clock::now();
+		needleAngle += needleStep;
 
-		renderer.fill(0x00000000);
+		if (needleAngle <= -45.0)
+		{
+			needleAngle = -45.0;
+			needleStep = 1.0;
+		}
+		else if (needleAngle >= 55.0)
+		{
+			//needleAngle = 55.0;
+			needleStep = -1.0;
+			running = false;
+		}
 
-		renderer.drawRect(
-			x,
-			100,
-			100,
-			100,
-			0x00FF0000);
-
-		renderer.drawLine(
-			100,
-			100,
-			400,
-			300,
-			5,
-			0x0000FF00);
-
-		renderer.fillCircle(
-			400,
-			240,
-			100,
-			0x000000FF);
-
-		renderer.drawCircle(
-			400,
-			240,
-			104,
-			8,
-			0x00FFFFFF);
-
-		renderer.drawArc(
-			700,
-			400,
-			80,
-			330,
-			30,
-			10,
-			0x00FFFF00);
-
-		auto drawEnd =
-    		std::chrono::steady_clock::now();
-
-		framebuffer.present(true);
-
-		auto presentEnd =
-    		std::chrono::steady_clock::now();
-
-		int nextBackBufferIndex =
+		int backBufferIndex =
         	framebuffer.backBufferIndex();
 
 		renderer.setTarget(
 			static_cast<std::uint32_t*>(
 				framebuffer.bufferMemory(
-					nextBackBufferIndex)));
-
-		auto drawTime =
-			std::chrono::duration_cast<
-				std::chrono::microseconds>(
-					drawEnd - drawStart)
-				.count();
-
-		auto presentTime =
-			std::chrono::duration_cast<
-				std::chrono::microseconds>(
-					presentEnd - drawEnd)
-				.count();
-
-		std::cout << "Draw: "
-				  << drawTime
-				  << " us, Present: "
-				  << presentTime
-				  << " us\n";
+					backBufferIndex)));
 		
+		RegionId regionId =
+			backBufferIndex == 0
+				? needleRegionBuffer0
+				: needleRegionBuffer1;
+					
+		renderer.restoreRegion(regionId);
+
+		gauge.setNeedleAngle(needleAngle);
+
+		RenderRegion region =
+        	gauge.needleRegion();
+		
+		renderer.saveRegion(
+			regionId,
+			region.x,
+			region.y,
+			region.width,
+			region.height);
+
+		gauge.drawNeedle();
+
+		framebuffer.present(true);
+
+		std::this_thread::sleep_for(
+			std::chrono::milliseconds(20));
 	}
+
+	sleep(10);
 
     return 0;
 }

@@ -9,6 +9,8 @@ add_executable(bbb_application
 	src/main.cpp
 	src/Framebuffer.cpp
     src/Renderer.cpp
+    src/Needle.cpp
+    src/Gauge.cpp
 )
 
 target_include_directories(bbb_application PRIVATE

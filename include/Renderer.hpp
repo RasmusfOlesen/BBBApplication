@@ -1,6 +1,33 @@
 #pragma once
 
+#include <vector>
 #include <cstdint>
+#include <unordered_map>
+
+enum class LineCap
+{
+    Butt,
+    Square,
+    Round
+};
+
+struct Point
+{
+    int x;
+    int y;
+};
+
+using RegionId = std::uint32_t;
+
+struct RenderRegion
+{
+    int x;
+    int y;
+    int width;
+    int height;
+
+    std::vector<std::uint32_t> pixels;
+};
 
 class Renderer
 {
@@ -28,13 +55,18 @@ public:
         int height,
         std::uint32_t color);
 
+    void drawPolygon(
+        const std::vector<Point>& points,
+        std::uint32_t color);
+
     void drawLine(
         int x0,
         int y0,
         int x1,
         int y1,
         int thickness,
-        std::uint32_t color);
+        std::uint32_t color,
+        LineCap = LineCap::Butt);
 
     void drawCircle(
         int centerX,
@@ -56,11 +88,24 @@ public:
         double startAngle,
         double endAngle,
         int thickness,
-        std::uint32_t color);
+        std::uint32_t color,
+        LineCap = LineCap::Butt);
+
+    void saveRegion(
+        RegionId regionId,
+        int x,
+        int y,
+        int width,
+        int height);
+
+    void restoreRegion(
+        RegionId regionId);
 
 private:
     std::uint32_t* pixels_;
 
     int width_;
     int height_;
+
+    std::unordered_map<RegionId, RenderRegion> regions_;
 };
