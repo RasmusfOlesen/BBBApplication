@@ -1,5 +1,7 @@
 #pragma once
 
+#include "TextRenderer.hpp"
+
 #include <vector>
 #include <cstdint>
 #include <unordered_map>
@@ -68,6 +70,18 @@ public:
         std::uint32_t color,
         LineCap = LineCap::Butt);
 
+    void drawRotatedLine(
+        int startX,
+        int startY,
+        int endX,
+        int endY,
+        int originX,
+        int originY,
+        double angle,
+        int thickness,
+        std::uint32_t color,
+        LineCap = LineCap::Butt);
+
     void drawCircle(
         int centerX,
         int centerY,
@@ -91,6 +105,13 @@ public:
         std::uint32_t color,
         LineCap = LineCap::Butt);
 
+    void drawText(
+        const char* text,
+        int x,
+        int y,
+        int size,
+        std::uint32_t color);
+
     void saveRegion(
         RegionId regionId,
         int x,
@@ -103,6 +124,8 @@ public:
 
 private:
     std::uint32_t* pixels_;
+
+    TextRenderer textRenderer_;
 
     int width_;
     int height_;

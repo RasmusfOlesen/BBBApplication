@@ -1,6 +1,7 @@
 #include "Framebuffer.hpp"
 #include "Renderer.hpp"
 #include "Gauge.hpp"
+#include "TextRenderer.hpp"
 
 #include <cstdint>
 #include <iostream>
@@ -40,6 +41,11 @@ int main()
 			framebuffer.bufferMemory(backBufferIndex));
 
 	Renderer renderer(			//Call the Renderer class
+		pixels,
+		framebuffer.width(),
+		framebuffer.height());
+
+	TextRenderer textRenderer(
 		pixels,
 		framebuffer.width(),
 		framebuffer.height());
@@ -149,7 +155,7 @@ int main()
 			std::chrono::milliseconds(20));
 	}
 
-	sleep(10);
+	//sleep(10);
 
     return 0;
 }

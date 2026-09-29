@@ -6,7 +6,8 @@
             "includePath": [
                 "${workspaceFolder}/include",
                 "/opt/bbb-sysroot/usr/include",
-                "/opt/bbb-sysroot/usr/include/libdrm"
+                "/opt/bbb-sysroot/usr/include/libdrm",
+                "/opt/bbb-sysroot/usr/include/freetype2"
             ],
             "defines": [],
             "cStandard": "c17",

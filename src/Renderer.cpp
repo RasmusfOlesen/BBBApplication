@@ -11,13 +11,17 @@ Renderer::Renderer(
     int height)
     : pixels_(pixels),
       width_(width),
-      height_(height)
+      height_(height),
+      textRenderer_(pixels, width, height)
 {
 }
 
 void Renderer::setTarget(std::uint32_t* pixels)
 {
     pixels_ = pixels;
+
+    textRenderer_.setTarget(
+        pixels);
 }
 
 void Renderer::setPixel(int x,int y,std::uint32_t color)
@@ -323,6 +327,65 @@ void Renderer::drawLine(
     }
 }
 
+void Renderer::drawRotatedLine(
+    int startX,
+    int startY,
+    int endX,
+    int endY,
+    int originX,
+    int originY,
+    double angle,
+    int thickness,
+    std::uint32_t color,
+    LineCap cap)
+{
+    double angleRadians =
+        angle * M_PI / 180.0;
+
+    double cosAngle =
+        std::cos(angleRadians);
+
+    double sinAngle =
+        std::sin(angleRadians);
+
+    int rotatedStartX =
+        originX +
+        static_cast<int>(
+            std::round(
+                startX * cosAngle +
+                startY * sinAngle));
+
+    int rotatedStartY =
+        originY +
+        static_cast<int>(
+            std::round(
+                -startX * sinAngle +
+                startY * cosAngle));
+
+    int rotatedEndX =
+        originX +
+        static_cast<int>(
+            std::round(
+                endX * cosAngle +
+                endY * sinAngle));
+
+    int rotatedEndY =
+        originY +
+        static_cast<int>(
+            std::round(
+                -endX * sinAngle +
+                endY * cosAngle));
+
+    drawLine(
+        rotatedStartX,
+        rotatedStartY,
+        rotatedEndX,
+        rotatedEndY,
+        thickness,
+        color,
+        cap);
+}
+
 void Renderer::drawCircle(
     int centerX,
     int centerY,
@@ -626,6 +689,21 @@ void Renderer::drawArc(
             thickness / 2,
             color);
     }
+}
+
+void Renderer::drawText(
+    const char* text,
+    int x,
+    int y,
+    int size,
+    std::uint32_t color)
+{
+    textRenderer_.drawText(
+        text,
+        x,
+        y,
+        size,
+        color);
 }
 
 void Renderer::saveRegion(

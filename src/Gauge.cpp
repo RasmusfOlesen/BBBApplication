@@ -85,88 +85,133 @@ void Gauge::drawBackground()
         0x00C0C0C0);
 
     //Draw Major Tick marks
-    renderer_.drawLine(
-        centerX_ - 67,
-        centerY_ - 17,
-        centerX_ - 79,
-        centerY_ - 29,
+    renderer_.drawRotatedLine(
+        0,
+        -112,
+        0,
+        -95,
+        needleX_,
+        needleY_,
+        45.0,
         6,
-        0x00FFFFFF,
-        LineCap::Butt);
+        0x00FFFFFF);
 
-    renderer_.drawLine(
-        centerX_ - 41,
-        centerY_ - 35,
-        centerX_ - 49,
-        centerY_ - 50,
+    renderer_.drawRotatedLine(
+        0,
+        -112,
+        0,
+        -95,
+        needleX_,
+        needleY_,
+        28.0,
         6,
-        0x00FFFFFF,
-        LineCap::Butt);
+        0x00FFFFFF);
 
-    renderer_.drawLine(
-        centerX_ + 1,
-        centerY_ - 44,
-        centerX_ + 1,
-        centerY_ - 61,
+    renderer_.drawRotatedLine(
+        0,
+        -112,
+        0,
+        -95,
+        needleX_,
+        needleY_,
+        0.0,
         6,
-        0x00FFFFFF,
-        LineCap::Butt);
+        0x00FFFFFF);
 
-    renderer_.drawLine(
-        centerX_ + 47,
-        centerY_ - 31,
-        centerX_ + 55,
-        centerY_ - 46,
+    renderer_.drawRotatedLine(
+        0,
+        -112,
+        0,
+        -95,
+        needleX_,
+        needleY_,
+        -28.0,
         6,
-        0x00FFFFFF,
-        LineCap::Butt);
+        0x00FFFFFF);
 
-    renderer_.drawLine(
-        centerX_ + 63,
-        centerY_ - 19,
-        centerX_ + 75,
-        centerY_ - 31,
+    renderer_.drawRotatedLine(
+        0,
+        -112,
+        0,
+        -95,
+        needleX_,
+        needleY_,
+        -45.0,
         6,
-        0x00FFFFFF,
-        LineCap::Butt);
+        0x00FF0000);
 
     //Draw Minor Tick marks
-        renderer_.drawLine(
-        centerX_ - 54,
-        centerY_ - 27,
-        centerX_ - 64,
-        centerY_ - 41,
+    renderer_.drawRotatedLine(
+        0,
+        -112,
+        0,
+        -95,
+        needleX_,
+        needleY_,
+        36.0,
         3,
-        0x00FFFFFF,
-        LineCap::Butt);
+        0x00FFFFFF);
 
-    renderer_.drawLine(
-        centerX_ - 20,
-        centerY_ - 42,
-        centerX_ - 24,
-        centerY_ - 58,
+    renderer_.drawRotatedLine(
+        0,
+        -112,
+        0,
+        -95,
+        needleX_,
+        needleY_,
+        14.0,
         3,
-        0x00FFFFFF,
-        LineCap::Butt);
+        0x00FFFFFF);
 
-    renderer_.drawLine(
-        centerX_ + 25,
-        centerY_ - 41,
-        centerX_ + 29,
-        centerY_ - 57,
+    renderer_.drawRotatedLine(
+        0,
+        -112,
+        0,
+        -95,
+        needleX_,
+        needleY_,
+        -14.0,
         3,
-        0x00FFFFFF,
-        LineCap::Butt);
+        0x00FFFFFF);
 
-    renderer_.drawLine(
-        centerX_ + 57,
-        centerY_ - 24,
-        centerX_ + 68,
-        centerY_ - 38,
+    renderer_.drawRotatedLine(
+        0,
+        -112,
+        0,
+        -95,
+        needleX_,
+        needleY_,
+        -39.0,
         3,
-        0x00FFFFFF,
-        LineCap::Butt);
+        0x00FF0000);
 
+    renderer_.drawText(
+        "Auto °C",
+        centerX_ - 30,
+        centerY_ - 70,
+        30,
+        0x00FFFFFF);
+
+    renderer_.drawText(
+        "50",
+        centerX_ - 67,
+        centerY_ + 3,
+        20,
+        0x00FFFFFF);
+
+    renderer_.drawText(
+        "100",
+        centerX_ - 13,
+        centerY_ - 25,
+        20,
+        0x00FFFFFF);
+
+    renderer_.drawText(
+        "150",
+        centerX_ + 37,
+        centerY_ + 3,
+        20,
+        0x00FFFFFF);
 }
 
 void Gauge::drawNeedle()
