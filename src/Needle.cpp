@@ -3,24 +3,24 @@
 
 #include <cmath>
 
-Needle::Needle() //Needle point up with respect to origin
+Needle::Needle() //Needle right with respect to origin
     : darkPoints_
     //Base of needle
     {
-        {0, -101}, //Tip
-		{2, -96},
-		{6, -19},  //Base to the right
-		{-6, -19}, //Base to the left
-		{-2, -96}
+        {101, 0}, //Tip
+		{96, 2},
+		{19, 6},  //Base to the right
+		{19, -6}, //Base to the left
+		{96, -2}
     },
 
     lightPoints_
     //light colord region on top of dark
     {
-        {0, -101}, //Tip
-		{0, -19},  //Base to the right
-		{-6, -19}, //Base to the left
-		{-2, -96}
+        {101, 0}, //Tip
+		{19, 0},  //Base to the right
+		{19, -6}, //Base to the left
+		{96, -2}
     },
 
     angle_(0.0),
@@ -54,11 +54,11 @@ std::vector<Point> Needle::rotatePoints(
     for (const Point& point : points)
     {
         double rotatedX =
-           -point.x * cosAngle +
+            point.x * cosAngle +
             point.y * sinAngle;
 
         double rotatedY =
-            point.x * sinAngle +
+          - point.x * sinAngle +
             point.y * cosAngle;
 
         rotated.push_back(

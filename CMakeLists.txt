@@ -14,6 +14,7 @@ add_executable(bbb_application
     src/Needle.cpp
     src/Gauge.cpp
     src/TextRenderer.cpp
+    src/GaugeScale.cpp
 )
 
 target_include_directories(bbb_application PRIVATE

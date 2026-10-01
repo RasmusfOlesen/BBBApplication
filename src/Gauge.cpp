@@ -1,5 +1,8 @@
 #include "Gauge.hpp"
 
+#include <string>
+#include <sstream>
+
 Gauge::Gauge(
     Renderer& renderer,
     int centerX,
@@ -9,74 +12,90 @@ Gauge::Gauge(
       centerX_(centerX),
       centerY_(centerY),
       needleX_(centerX),
-      needleY_(centerY + 51)
+      needleY_(centerY + 51),
+      value_(0.0)  
 {
+    scale_.setMapping({
+        { 40.0, 145.0 },
+        { 50.0, 135.0 },
+        {120.0,  90.0 },
+        {150.0,  45.0 }
+    });
+
+    scale_.setTicks({
+        { 50.0, TickType::Major, 0x00FFFFFF },
+
+        { 60.0, TickType::Minor, 0x00808080 },
+        { 70.0, TickType::Minor, 0x00808080 },
+        { 80.0, TickType::Minor, 0x00808080 },
+        { 90.0, TickType::Minor, 0x00808080 },
+        {100.0, TickType::Minor, 0x00808080 },
+        {110.0, TickType::Minor, 0x00808080 },
+
+        {120.0, TickType::Major, 0x00FFFFFF },
+
+        {130.0, TickType::Minor, 0x00808080 },
+        {140.0, TickType::Minor, 0x00808080 },
+
+        {150.0, TickType::Major, 0x00FFFFFF }
+    });
 }
 
 uint32_t ScaleColor = 0x00FFFFFF;
 
 void Gauge::drawBackground()
 {
-/*    
-    // Guidelines
+    //Draw Tickmarks based on scale definition
+    for (const ScaleTick& tick : scale_.ticks())
+    {
+        double angle =
+            scale_.valueToAngle(tick.value);
 
-    //Outside scale Arc
-    renderer_.drawArc(
-        needleX_,
-        needleY_,
-        112,
-        45,
-        135,
-        1,
-        0x00808080);
+        int startX;
+        int startY;
+        int endX;
+        int endY;
+        int thickness;
 
-    //Inside Scale arc
-    renderer_.drawArc(
-        needleX_,
-        needleY_,
-        94,
-        45,
-        135,
-        1,
-        0x00808080);
+        if (tick.type == TickType::Major)
+        {
+            startX = 112;
+            startY = 0;
 
-    //Needle boundery box
-    renderer_.drawLine(
-        needleX_ - 102,
-        needleY_ - 102,
-        needleX_ + 102,
-        needleY_ - 102,
-        1,
-        0x00808080,
-        LineCap::Round);
+            endX = 95;
+            endY = 0;
 
-    renderer_.drawLine(
-        needleX_ + 102,
-        needleY_ - 102,
-        needleX_ + 102,
-        needleY_ + 102,
-        1,
-        0x00808080,
-        LineCap::Round);
+            thickness = 6;
+        }
+        else if (tick.type == TickType::Minor)
+        {
+            startX = 112;
+            startY = 0;
 
-    renderer_.drawLine(
-        needleX_ + 102,
-        needleY_ + 102,
-        needleX_ - 102,
-        needleY_ + 102,
-        1,
-        0x00808080,
-        LineCap::Round);
+            endX = 95;
+            endY = 0;
 
-    renderer_.drawLine(
-        needleX_ - 102,
-        needleY_ + 102,
-        needleX_ - 102,
-        needleY_ - 102,
-        1,
-        0x00808080,
-        LineCap::Round);
-*/
+            thickness = 3;
+        }
+        else
+        {
+            continue;
+        }
+
+        renderer_.drawRotatedLine(
+            startX,
+            startY,
+            endX,
+            endY,
+            needleX_,
+            needleY_,
+            angle,
+            thickness,
+            tick.color);
+    }
+
+
+    // Draw gauge outline
     renderer_.drawCircle(
         centerX_,
         centerY_,
@@ -84,107 +103,7 @@ void Gauge::drawBackground()
         3,
         0x00C0C0C0);
 
-    //Draw Major Tick marks
-    renderer_.drawRotatedLine(
-        0,
-        -112,
-        0,
-        -95,
-        needleX_,
-        needleY_,
-        45.0,
-        6,
-        0x00FFFFFF);
-
-    renderer_.drawRotatedLine(
-        0,
-        -112,
-        0,
-        -95,
-        needleX_,
-        needleY_,
-        28.0,
-        6,
-        0x00FFFFFF);
-
-    renderer_.drawRotatedLine(
-        0,
-        -112,
-        0,
-        -95,
-        needleX_,
-        needleY_,
-        0.0,
-        6,
-        0x00FFFFFF);
-
-    renderer_.drawRotatedLine(
-        0,
-        -112,
-        0,
-        -95,
-        needleX_,
-        needleY_,
-        -28.0,
-        6,
-        0x00FFFFFF);
-
-    renderer_.drawRotatedLine(
-        0,
-        -112,
-        0,
-        -95,
-        needleX_,
-        needleY_,
-        -45.0,
-        6,
-        0x00FF0000);
-
-    //Draw Minor Tick marks
-    renderer_.drawRotatedLine(
-        0,
-        -112,
-        0,
-        -95,
-        needleX_,
-        needleY_,
-        36.0,
-        3,
-        0x00FFFFFF);
-
-    renderer_.drawRotatedLine(
-        0,
-        -112,
-        0,
-        -95,
-        needleX_,
-        needleY_,
-        14.0,
-        3,
-        0x00FFFFFF);
-
-    renderer_.drawRotatedLine(
-        0,
-        -112,
-        0,
-        -95,
-        needleX_,
-        needleY_,
-        -14.0,
-        3,
-        0x00FFFFFF);
-
-    renderer_.drawRotatedLine(
-        0,
-        -112,
-        0,
-        -95,
-        needleX_,
-        needleY_,
-        -39.0,
-        3,
-        0x00FF0000);
-
+   
     renderer_.drawText(
         "Auto °C",
         centerX_ - 30,
@@ -200,7 +119,7 @@ void Gauge::drawBackground()
         0x00FFFFFF);
 
     renderer_.drawText(
-        "100",
+        "120",
         centerX_ - 13,
         centerY_ - 25,
         20,
@@ -230,9 +149,34 @@ void Gauge::drawNeedle()
         0x00202020);
 }
 
-void Gauge::setNeedleAngle(double angle)
+void Gauge::drawValue()
 {
-    needle_.setAngle(angle);
+    std::ostringstream ss;
+    ss << value_;
+
+    std::string valueText = ss.str();
+
+    renderer_.drawRect(
+        needleX_ - 50,
+        needleY_,
+        100,
+        50,
+        0x00000000);
+
+    renderer_.drawText(
+        valueText.c_str(),
+        needleX_ - 25,
+        needleY_ + 25,
+        20,
+        0x00FFFFFF);
+}
+
+void Gauge::setValue(double value)
+{
+    value_ = value;
+
+    needle_.setAngle(
+        scale_.valueToAngle(value));
 }
 
 RenderRegion Gauge::needleRegion() const

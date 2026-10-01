@@ -2,6 +2,7 @@
 
 #include "Renderer.hpp"
 #include "Needle.hpp"
+#include "GaugeScale.hpp"
 
 class Gauge
 {
@@ -13,8 +14,9 @@ public:
 
     void drawBackground();
     void drawNeedle();
+    void drawValue();
 
-    void setNeedleAngle(double angle);
+    void setValue(double value);
     
     RenderRegion needleRegion() const;
 
@@ -23,9 +25,13 @@ private:
 
     Needle needle_;
 
+    GaugeScale scale_;
+
     int centerX_;
     int centerY_;
 
     int needleX_;
     int needleY_;
+
+    double value_;
 };

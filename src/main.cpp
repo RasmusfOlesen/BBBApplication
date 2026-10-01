@@ -58,15 +58,15 @@ int main()
 	const RegionId needleRegionBuffer0 = 0;
 	const RegionId needleRegionBuffer1 = 1;
 
-	double needleAngle = 55.0;
-	double needleStep = -1.0;
+	double value = 150.0;
+	double valueStep = -1.0;
 
 	//Draw Initial background
 	renderer.fill(0x00000000); //All black
 
 	gauge.drawBackground();
 
-	gauge.setNeedleAngle(needleAngle);
+	gauge.setValue(value);
 
 	RenderRegion region =
     	gauge.needleRegion();
@@ -79,6 +79,7 @@ int main()
     region.height);
 
 	gauge.drawNeedle();
+	gauge.drawValue();
 
 	framebuffer.present(true);
 
@@ -101,23 +102,25 @@ int main()
 		region.height);
 
 	gauge.drawNeedle();
+	gauge.drawValue();
 
 	bool running = true;
 
 	while (running)
 	{
-		needleAngle += needleStep;
+		value += valueStep;
 
-		if (needleAngle <= -45.0)
+		if (value <= 40.0)
 		{
-			needleAngle = -45.0;
-			needleStep = 1.0;
-		}
-		else if (needleAngle >= 55.0)
-		{
-			//needleAngle = 55.0;
-			needleStep = -1.0;
+			value = 40.0;
+			valueStep = 1.0;
 			running = false;
+		}
+		else if (value >= 150.0)
+		{
+			value = 150.0;
+			valueStep = -1.0;
+			
 		}
 
 		int backBufferIndex =
@@ -135,7 +138,7 @@ int main()
 					
 		renderer.restoreRegion(regionId);
 
-		gauge.setNeedleAngle(needleAngle);
+		gauge.setValue(value);
 
 		RenderRegion region =
         	gauge.needleRegion();
@@ -148,6 +151,7 @@ int main()
 			region.height);
 
 		gauge.drawNeedle();
+		gauge.drawValue();
 
 		framebuffer.present(true);
 
